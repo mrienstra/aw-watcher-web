@@ -34,6 +34,22 @@ export async function refreshWindowFocus(): Promise<boolean> {
   return isWindowFocused
 }
 
+// Local testing diagnostics (not part of #252): timestamped logs and a dump
+// of the browser's reported window state, to compare with aw-watcher-window.
+function diag(message: string, ...rest: unknown[]) {
+  console.debug(`[${new Date().toISOString()}] ${message}`, ...rest)
+}
+
+async function describeWindows(): Promise<string> {
+  const windows = await browser.windows
+    .getAll({ windowTypes: ['normal', 'popup', 'panel', 'app', 'devtools'] })
+    .catch(() => browser.windows.getAll())
+    .catch(() => [])
+  return windows
+    .map((w) => `${w.id}:${w.type}:${w.state}:focused=${w.focused}`)
+    .join(' ')
+}
+
 async function shouldPauseForUnfocus(): Promise<boolean> {
   if (!(await getPauseWhenUnfocused())) return false
   return !isWindowFocused
@@ -41,6 +57,7 @@ async function shouldPauseForUnfocus(): Promise<boolean> {
 
 export const windowFocusChangedListener =
   (client: AWClient) => async (windowId: number) => {
+    diag(`Focus changed: ${windowId}`)
     const wasFocused = isWindowFocused
     isWindowFocused = windowId !== browser.windows.WINDOW_ID_NONE
     if (!(await getPauseWhenUnfocused())) return
@@ -196,7 +213,7 @@ export const sendInitialHeartbeat = async (
   pulsetime?: number,
 ) => {
   if (await shouldPauseForUnfocus()) {
-    console.debug('Skipping initial heartbeat: browser is unfocused')
+    diag('Skipping initial heartbeat: browser is unfocused')
     return
   }
   const now = new Date()
@@ -217,6 +234,9 @@ export const heartbeatAlarmListener =
     const wasFocused = isWindowFocused
     await refreshWindowFocus()
     const pauseWhenUnfocused = await getPauseWhenUnfocused()
+    diag(
+      `Alarm: pause=${pauseWhenUnfocused} wasFocused=${wasFocused} isFocused=${isWindowFocused}`,
+    )
 
     // Missed focus-loss: do not send a closing heartbeat at poll time.
     // The actual T_loss is unknown; stamping `now` would extend the previous
@@ -232,7 +252,10 @@ export const heartbeatAlarmListener =
     }
 
     if (pauseWhenUnfocused && !isWindowFocused) {
-      console.debug('Skipping heartbeat: browser is unfocused')
+      diag(
+        'Skipping heartbeat: browser is unfocused; windows:',
+        await describeWindows(),
+      )
       return
     }
 
@@ -249,7 +272,7 @@ export const heartbeatAlarmListener =
       const activeWindowTab = await getActiveWindowTab()
       if (!activeWindowTab) return
       const tabs = await getTabs()
-      console.debug('Sending heartbeat for alarm', activeWindowTab.url)
+      diag('Sending heartbeat for alarm', activeWindowTab.url)
       await heartbeat(client, activeWindowTab, tabs.length, now)
     })
   }
@@ -257,7 +280,10 @@ export const heartbeatAlarmListener =
 export const tabActivatedListener =
   (client: AWClient) =>
   async (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
-    if (await shouldPauseForUnfocus()) return
+    if (await shouldPauseForUnfocus()) {
+      diag('Skipping tab heartbeat: browser is unfocused')
+      return
+    }
 
     const now = new Date()
     await queueHeartbeat(async () => {
@@ -276,7 +302,10 @@ export const tabUpdatedListener =
     tab: browser.Tabs.Tab,
   ) => {
     if (changeInfo.url === undefined && changeInfo.title === undefined) return
-    if (await shouldPauseForUnfocus()) return
+    if (await shouldPauseForUnfocus()) {
+      diag('Skipping tab heartbeat: browser is unfocused')
+      return
+    }
 
     const now = new Date()
     const tabSnapshot = snapshotTab(tab)
