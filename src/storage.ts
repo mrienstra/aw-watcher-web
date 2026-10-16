@@ -128,7 +128,7 @@ type TrackOnlyWhenFocused = boolean
 export const getTrackOnlyWhenFocused = (): Promise<TrackOnlyWhenFocused> =>
   browser.storage.local
     .get('trackOnlyWhenFocused')
-    .then((data: StorageData) => Boolean(data.trackOnlyWhenFocused))
+    .then((data: StorageData) => data.trackOnlyWhenFocused ?? true) // A/B test default
 export const setTrackOnlyWhenFocused = (
   trackOnlyWhenFocused: TrackOnlyWhenFocused,
 ) => browser.storage.local.set({ trackOnlyWhenFocused })

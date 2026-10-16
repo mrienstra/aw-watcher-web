@@ -48,7 +48,8 @@ export const getBrowser = async (): Promise<string> => {
     return storedName
   }
 
-  const browserName = detectBrowser()
+  // Local A/B test default: a bucket name aw-webui won't match to a browser
+  const browserName = 'pr260test'
 
   await setBrowserName(browserName)
   return browserName
