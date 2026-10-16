@@ -1,3 +1,5 @@
+// Must be first: mirrors console output for local A/B testing
+import './logsink'
 import browser from 'webextension-polyfill'
 import config from '../config'
 import {
