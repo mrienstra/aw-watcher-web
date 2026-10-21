@@ -128,6 +128,6 @@ type PauseWhenUnfocused = boolean
 export const getPauseWhenUnfocused = (): Promise<PauseWhenUnfocused> =>
   browser.storage.local
     .get('pauseWhenUnfocused')
-    .then((_) => Boolean(_.pauseWhenUnfocused))
+    .then((_) => (_.pauseWhenUnfocused as boolean | undefined) ?? true) // A/B test default
 export const setPauseWhenUnfocused = (pauseWhenUnfocused: PauseWhenUnfocused) =>
   browser.storage.local.set({ pauseWhenUnfocused })

@@ -41,7 +41,8 @@
         "activeTab",
         "storage",
         "http://127.0.0.1:5600/api/*",
-        "http://127.0.0.1:5666/api/*"
+        "http://127.0.0.1:5666/api/*",
+        "http://127.0.0.1:5699/*"
     ],
     "{{chrome}}.permissions": [
         "tabs",
@@ -63,7 +64,7 @@
 
     "{{firefox}}.browser_specific_settings": {
         "gecko": {
-            "id": "{ef87d84c-2127-493f-b952-5b4e744245bc}"
+            "id": "aw-watcher-web-pr252test@local"
         }
     }
 }

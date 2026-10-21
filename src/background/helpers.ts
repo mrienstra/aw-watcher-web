@@ -43,14 +43,12 @@ export function emitNotification(title: string, message: string) {
 }
 
 export const getBrowser = async (): Promise<string> => {
-  const storedName = await getBrowserName()
-  if (storedName) {
-    return storedName
+  // A/B test: always use the test bucket name, even if the settings page
+  // saves a different browser name
+  const browserName = 'pr252test'
+  if ((await getBrowserName()) !== browserName) {
+    await setBrowserName(browserName)
   }
-
-  const browserName = detectBrowser()
-
-  await setBrowserName(browserName)
   return browserName
 }
 
