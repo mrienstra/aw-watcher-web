@@ -1,5 +1,5 @@
 // Local A/B testing only (not for upstream): mirror console output to a log
-// server on this machine (reference/log-sink.py), so logs are kept without
+// server on this machine (ab-test/log-sink.py), so logs are kept without
 // DevTools open. Fire-and-forget: nothing awaits these requests.
 const TAG = 'pr260'
 const SINK = 'http://127.0.0.1:5699/log'

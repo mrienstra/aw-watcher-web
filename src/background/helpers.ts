@@ -43,15 +43,12 @@ export function emitNotification(title: string, message: string) {
 }
 
 export const getBrowser = async (): Promise<string> => {
-  const storedName = await getBrowserName()
-  if (storedName) {
-    return storedName
-  }
-
-  // Local A/B test default: a bucket name aw-webui won't match to a browser
+  // A/B test: always use the test bucket name, even if the settings page
+  // saves a different browser name
   const browserName = 'pr260test'
-
-  await setBrowserName(browserName)
+  if ((await getBrowserName()) !== browserName) {
+    await setBrowserName(browserName)
+  }
   return browserName
 }
 
